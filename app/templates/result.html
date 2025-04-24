@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversion Result - JSON to CSV</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+        
+        body {
+            padding: 0;
+            background-color: #f9fafb;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-weight: 600;
+            padding: 10px 0;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            background-color: white;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 1.2rem 1.5rem;
+        }
+        
+        .card-title {
+            margin: 0;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .actions {
+            margin: 20px 0;
+        }
+        
+        .dataTables_wrapper {
+            padding: 15px;
+            width: 100%;
+            border-radius: 8px;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .container-fluid {
+            padding: 0 15px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        table.dataTable {
+            width: 100% !important;
+            border-collapse: separate !important;
+            border-spacing: 0;
+            margin-top: 1rem !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        table.dataTable thead th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #e9ecef;
+            border-top: none;
+            padding: 12px 18px;
+            position: relative;
+        }
+        
+        table.dataTable tbody td {
+            padding: 12px 18px;
+            border-bottom: 1px solid #f1f1f1;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+        
+        table.dataTable tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        table.dataTable tbody tr:hover {
+            background-color: rgba(67, 97, 238, 0.04);
+        }
+        
+        .dataTables_length, .dataTables_filter {
+            padding: 10px 0;
+        }
+        
+        .dataTables_length select {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 6px 36px 6px 12px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+            background-position: right 10px center;
+            min-width: 100px;
+            max-width: 160px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23adb5bd' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: calc(100% - 10px) center;
+        }
+        
+        .dataTables_filter input {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 6px 12px 6px 35px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+            width: 250px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23adb5bd' class='bi bi-search' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 10px center;
+        }
+        
+        .dataTables_filter input:focus, .dataTables_length select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+            outline: none;
+        }
+        
+        .dataTables_length label, .dataTables_filter label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .dataTables_length label {
+            gap: 8px;
+        }
+        
+        .dataTables_paginate .paginate_button {
+            border: none !important;
+            background: none !important;
+            padding: 5px 10px;
+            margin: 0 2px;
+            border-radius: 5px;
+            color: #6c757d !important;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .dataTables_paginate .paginate_button:hover {
+            background-color: #eaecf4 !important;
+            color: var(--primary-color) !important;
+        }
+        
+        .dataTables_paginate .paginate_button.current {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+        
+        .dataTables_info {
+            color: #6c757d;
+            font-size: 14px;
+            padding-top: 15px;
+        }
+        
+        .dataTables_paginate {
+            padding-top: 10px;
+        }
+        
+        .header {
+            margin-bottom: 2rem;
+        }
+        
+        .main-title {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #6c757d;
+            font-weight: 400;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-success {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+        
+        .btn-success:hover {
+            background-color: #059669;
+            border-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-outline-secondary {
+            border-color: #e0e0e0;
+            color: #6c757d;
+        }
+        
+        .btn-outline-secondary:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: #6c757d;
+            padding: 20px 0;
+            font-size: 0.9rem;
+        }
+        
+        .result-section {
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
+            position: relative;
+        }
+        
+        .full-width-container {
+            max-width: 100%;
+            padding: 0;
+        }
+        
+        /* Fix for "Show X entries" dropdown */
+        div.dataTables_length select {
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+        
+        /* Column search inputs */
+        .column-search th {
+            padding: 8px 4px;
+        }
+        
+        .column-search input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            background-color: #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .column-search input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            outline: none;
+        }
+        
+        /* Reset button */
+        .btn-reset {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+            color: #6c757d;
+            font-size: 14px;
+            padding: 8px 15px;
+        }
+        
+        .btn-reset:hover {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        .filters-row {
+            margin-bottom: 15px;
+        }
+        
+        /* Media Queries for Responsive Design */
+        @media (max-width: 768px) {
+            .dataTables_filter input {
+                width: 150px;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .container-fluid {
+                padding: 0 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <span class="navbar-brand"><i class="fas fa-exchange-alt me-2"></i> JSON to CSV Converter</span>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="header text-center">
+            <h1 class="display-4 main-title">Conversion Result</h1>
+            <p class="lead subtitle">Your JSON has been successfully converted to CSV format</p>
+        </div>
+
+        <div class="actions d-flex justify-content-between">
+            <a href="/" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Convert Another
+            </a>
+            <a href="/download/{{ conversion_id }}" class="btn btn-success" download>
+                <i class="fas fa-download me-2"></i>Download CSV
+            </a>
+        </div>
+    </div>
+
+    <div class="result-section">
+        <div class="container-fluid full-width-container">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title fs-4">Data Preview</h3>
+                    <div class="button-group">
+                        <button id="reset-filters" class="btn btn-sm btn-outline-secondary me-2" title="Reset all filters">
+                            <i class="fas fa-undo-alt me-1"></i>Reset Filters
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="window.print()" title="Print">
+                            <i class="fas fa-print"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table id="resultTable" class="table table-striped table-bordered w-100">
+                            <thead>
+                                <tr>
+                                    {% for header in headers %}
+                                    <th>{{ header }}</th>
+                                    {% endfor %}
+                                </tr>
+                                <tr class="column-search">
+                                    {% for header in headers %}
+                                    <th><input type="text" placeholder="Search {{ header }}..." class="form-control form-control-sm" /></th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in rows %}
+                                <tr>
+                                    {% for cell in row %}
+                                    <td>{{ cell }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <footer>
+            <p>JSON to CSV Converter &copy; 2024 | <i class="fas fa-code"></i> with <i class="fas fa-heart text-danger"></i></p>
+        </footer>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Setup - add a text input to each footer cell
+            var table = $('#resultTable').DataTable({
+                responsive: true,
+                pageLength: -1, // Show all rows by default
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                dom: '<"row filters-row"<"col-sm-6"l><"col-sm-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-5"i><"col-sm-7"p>>',
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search all columns...",
+                    lengthMenu: "_MENU_ per page",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "Showing 0 to 0 of 0 entries",
+                    infoFiltered: "(filtered from _MAX_ total entries)"
+                },
+                orderCellsTop: true,
+                autoWidth: true,
+                scrollX: true,
+                stateSave: true,
+                initComplete: function() {
+                    // Apply the column search
+                    this.api().columns().every(function(colIdx) {
+                        var column = this;
+                        var input = $('input', $('.column-search th').eq(column.index()));
+                        
+                        // On input change, search the column
+                        input.on('keyup change', function() {
+                            column
+                                .search(this.value)
+                                .draw();
+                        });
+                    });
+                }
+            });
+            
+            // Reset filters button
+            $('#reset-filters').on('click', function() {
+                $('.column-search input').val('').trigger('change');
+                table.search('').columns().search('').draw();
+            });
+        });
+    </script>
+</body>
+</html> 

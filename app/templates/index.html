@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to CSV Converter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+        
+        body {
+            padding: 0;
+            background-color: #f9fafb;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-weight: 600;
+            padding: 10px 0;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            background-color: white;
+            margin-bottom: 30px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 1.2rem 1.5rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .json-input {
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 200px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            font-size: 14px;
+        }
+        
+        .json-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+        
+        .header {
+            margin-bottom: 2rem;
+        }
+        
+        .main-title {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #6c757d;
+            font-weight: 400;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 10px 20px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        .container-fluid {
+            padding: 0 15px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .form-section {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #444;
+            margin-bottom: 8px;
+        }
+        
+        .form-text {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            background-color: rgba(220, 53, 69, 0.05);
+        }
+        
+        .nav-tabs {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            padding: 10px 15px;
+            margin-right: 10px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-color);
+            border-color: transparent;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background-color: transparent;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .form-control {
+            border-radius: 8px;
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+        
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: #6c757d;
+            padding: 20px 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <span class="navbar-brand"><i class="fas fa-exchange-alt me-2"></i> JSON to CSV Converter</span>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="header text-center">
+            <h1 class="display-4 main-title">Convert JSON to CSV</h1>
+            <p class="lead subtitle">Transform your JSON data into a structured CSV format with interactive table view</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger shadow-sm mb-4" role="alert">
+            <div class="d-flex">
+                <div class="me-3">
+                    <i class="fas fa-exclamation-circle fs-4"></i>
+                </div>
+                <div>
+                    <h5 class="alert-heading">Error</h5>
+                    <p class="mb-0">{{ error }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row justify-content-center form-section">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title fs-4 m-0">Input Options</h3>
+                    </div>
+                    <div class="card-body">
+                        <form action="/convert" method="post" enctype="multipart/form-data">
+                            <ul class="nav nav-tabs" id="inputTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="text-tab" data-bs-toggle="tab" data-bs-target="#text" type="button" role="tab" aria-controls="text" aria-selected="true">
+                                        <i class="fas fa-code me-2"></i>Paste JSON
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="file-tab" data-bs-toggle="tab" data-bs-target="#file" type="button" role="tab" aria-controls="file" aria-selected="false">
+                                        <i class="fas fa-file-upload me-2"></i>Upload File
+                                    </button>
+                                </li>
+                            </ul>
+                            
+                            <div class="tab-content p-3" id="inputTabsContent">
+                                <div class="tab-pane fade show active" id="text" role="tabpanel" aria-labelledby="text-tab">
+                                    <div class="mb-3">
+                                        <label for="json_text" class="form-label">JSON Text</label>
+                                        <textarea class="form-control json-input" id="json_text" name="json_text" placeholder='[
+  {"name": "John", "age": 30, "city": "New York"},
+  {"name": "Alice", "age": 25, "city": "Boston"}
+]'></textarea>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>Paste valid JSON text to convert to CSV format
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="file" role="tabpanel" aria-labelledby="file-tab">
+                                    <div class="mb-3">
+                                        <label for="json_file" class="form-label">Select JSON File</label>
+                                        <input class="form-control" type="file" id="json_file" name="json_file" accept=".json">
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>Upload a JSON file (.json) to convert to CSV format
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 pt-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt me-2"></i>Convert to CSV
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container-fluid">
+            <p>JSON to CSV Converter &copy; 2024 | <i class="fas fa-code"></i> with <i class="fas fa-heart text-danger"></i></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
