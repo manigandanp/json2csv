@@ -330,6 +330,101 @@
                 padding: 0 15px;
             }
         }
+        
+        /* Add styles for column visibility dropdown */
+        .dt-button-collection {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .column-visibility-btn {
+            margin-right: 10px;
+        }
+        
+        .column-toggle-list {
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .column-toggle-list .form-check {
+            padding: 5px 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+        
+        .column-toggle-list .form-check:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .dropdown-menu.column-visibility {
+            padding: 15px;
+            min-width: 250px;
+        }
+        
+        .btn-toggle-columns {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            margin-right: 10px;
+        }
+        
+        .btn-toggle-columns:hover {
+            background-color: #5a6268;
+        }
+        
+        /* Column filters row styling */
+        tr.column-filters th {
+            padding: 8px;
+            background-color: #f8f9fa;
+            position: relative;
+        }
+        
+        tr.column-filters input {
+            width: 100%;
+            padding: 6px 10px;
+            font-size: 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            min-width: 60px;
+        }
+        
+        tr.column-filters input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.1);
+            outline: none;
+        }
+        
+        /* Responsive adjustments for filters */
+        @media (max-width: 768px) {
+            tr.column-filters input {
+                padding: 4px 6px;
+                font-size: 11px;
+            }
+            
+            table.dataTable thead tr:first-child th {
+                padding: 8px 4px;
+                font-size: 13px;
+            }
+        }
+        
+        /* Fix table header styling */
+        table.dataTable thead tr:first-child th {
+            font-weight: 600;
+            color: #495057;
+            background-color: #f8f9fa;
+            padding: 12px 8px;
+        }
+        
+        /* Additional dropdown styling */
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        #showAllColumns, #hideAllColumns {
+            z-index: 1000;
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -345,12 +440,41 @@
             <p class="lead subtitle">Your JSON has been successfully converted to CSV format</p>
         </div>
 
-        <div class="actions d-flex justify-content-between">
-            <a href="/" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Convert Another
-            </a>
-            <a href="/download/{{ conversion_id }}" class="btn btn-success" download>
-                <i class="fas fa-download me-2"></i>Download CSV
+        <div class="actions d-flex justify-content-between mb-4">
+            <div>
+                <a href="/" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left"></i> Back to Converter
+                </a>
+                
+                <!-- Column visibility dropdown -->
+                <div class="btn-group column-visibility-btn">
+                    <button type="button" class="btn btn-toggle-columns dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-columns"></i> Toggle Columns
+                    </button>
+                    <ul class="dropdown-menu column-visibility">
+                        <li><h6 class="dropdown-header">Show/Hide Columns</h6></li>
+                        <li>
+                            <div class="column-toggle-list px-3" id="columnToggleList">
+                                <!-- Column toggles will be added here dynamically -->
+                                {% for header in headers %}
+                                <div class="form-check">
+                                    <input class="form-check-input column-toggle" type="checkbox" id="column-{{ loop.index0 }}" data-column="{{ loop.index0 }}" checked>
+                                    <label class="form-check-label" for="column-{{ loop.index0 }}">{{ header }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><div class="d-flex justify-content-between px-3 pb-2">
+                            <button id="showAllColumns" class="btn btn-sm btn-outline-primary" type="button">Show All</button>
+                            <button id="hideAllColumns" class="btn btn-sm btn-outline-secondary" type="button">Hide All</button>
+                        </div></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <a href="/download/{{ conversion_id }}" class="btn btn-success">
+                <i class="fas fa-download"></i> Download CSV
             </a>
         </div>
     </div>
@@ -361,10 +485,10 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title fs-4">Data Preview</h3>
                     <div class="button-group">
-                        <button id="reset-filters" class="btn btn-sm btn-outline-secondary me-2" title="Reset all filters">
-                            <i class="fas fa-undo-alt me-1"></i>Reset Filters
+                        <button id="reset-filters" class="btn btn-outline-secondary" title="Reset all filters">
+                            <i class="fas fa-undo-alt me-1"></i> Reset Filters
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="window.print()" title="Print">
+                        <button class="btn btn-outline-secondary ms-2" onclick="window.print()" title="Print">
                             <i class="fas fa-print"></i>
                         </button>
                     </div>
@@ -378,9 +502,9 @@
                                     <th>{{ header }}</th>
                                     {% endfor %}
                                 </tr>
-                                <tr class="column-search">
+                                <tr class="column-filters">
                                     {% for header in headers %}
-                                    <th><input type="text" placeholder="Search {{ header }}..." class="form-control form-control-sm" /></th>
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Filter {{ header }}"></th>
                                     {% endfor %}
                                 </tr>
                             </thead>
@@ -412,46 +536,92 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Setup - add a text input to each footer cell
+            // Setup DataTable
             var table = $('#resultTable').DataTable({
                 responsive: true,
-                pageLength: -1, // Show all rows by default
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-                dom: '<"row filters-row"<"col-sm-6"l><"col-sm-6"f>>' +
-                     '<"row"<"col-sm-12"tr>>' +
-                     '<"row"<"col-sm-5"i><"col-sm-7"p>>',
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search all columns...",
-                    lengthMenu: "_MENU_ per page",
-                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                    infoEmpty: "Showing 0 to 0 of 0 entries",
-                    infoFiltered: "(filtered from _MAX_ total entries)"
-                },
-                orderCellsTop: true,
-                autoWidth: true,
-                scrollX: true,
-                stateSave: true,
-                initComplete: function() {
-                    // Apply the column search
-                    this.api().columns().every(function(colIdx) {
-                        var column = this;
-                        var input = $('input', $('.column-search th').eq(column.index()));
-                        
-                        // On input change, search the column
-                        input.on('keyup change', function() {
-                            column
-                                .search(this.value)
-                                .draw();
-                        });
-                    });
-                }
+                pageLength: 25,
+                order: [],
+                orderCellsTop: true // Enable ordering on the header row, not filter row
+            });
+            
+            // Setup column filters
+            $('.column-filters th').each(function (i) {
+                var input = $(this).find('input');
+                
+                // Add event listener to the input
+                input.on('keyup change', function () {
+                    if (table.column(i).search() !== this.value) {
+                        table
+                            .column(i)
+                            .search(this.value)
+                            .draw();
+                    }
+                });
+            });
+            
+            // Handle column visibility toggle
+            $('.column-toggle').on('change', function() {
+                var columnIndex = $(this).data('column');
+                var isVisible = $(this).prop('checked');
+                table.column(columnIndex).visible(isVisible);
+            });
+            
+            // Show all columns
+            $('#showAllColumns').on('click', function() {
+                $('.column-toggle').prop('checked', true);
+                
+                // Update column visibility
+                $('.column-toggle').each(function() {
+                    var columnIndex = $(this).data('column');
+                    table.column(columnIndex).visible(true);
+                });
+                
+                // Prevent dropdown from closing
+                return false;
+            });
+            
+            // Hide all columns
+            $('#hideAllColumns').on('click', function() {
+                $('.column-toggle').prop('checked', false);
+                
+                // Update column visibility
+                $('.column-toggle').each(function() {
+                    var columnIndex = $(this).data('column');
+                    table.column(columnIndex).visible(false);
+                });
+                
+                // Prevent dropdown from closing
+                return false;
             });
             
             // Reset filters button
             $('#reset-filters').on('click', function() {
-                $('.column-search input').val('').trigger('change');
-                table.search('').columns().search('').draw();
+                // Clear global search
+                table.search('').draw();
+                
+                // Clear column-specific filters
+                table.columns().every(function() {
+                    this.search('');
+                });
+                
+                // Reset all filter input fields
+                $('.column-filters input').val('');
+                $('.dataTables_filter input').val('');
+                
+                // Redraw the table
+                table.draw();
+                
+                // Show visual feedback
+                $('#reset-filters').addClass('btn-success').removeClass('btn-outline-secondary');
+                setTimeout(function() {
+                    $('#reset-filters').removeClass('btn-success').addClass('btn-outline-secondary');
+                }, 1000);
+            });
+            
+            // Prevent dropdown from closing when clicking inside it
+            $(document).on('click', '.dropdown-menu.column-visibility', function(e) {
+                e.stopPropagation();
             });
         });
     </script>
