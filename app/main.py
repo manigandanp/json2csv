@@ -8,6 +8,7 @@ import io
 import os
 from pathlib import Path
 import uuid
+import itertools
 
 app = FastAPI(title="JSON to CSV Converter")
 
@@ -19,6 +20,63 @@ templates = Jinja2Templates(directory="app/templates")
 uploads_dir = Path("uploads")
 if not uploads_dir.exists():
     uploads_dir.mkdir()
+
+
+def flatten_nested_json(data, prefix=""):
+    """
+    Recursively flatten nested JSON structures.
+    Returns a list of flattened dictionaries.
+    """
+    flattened_items = []
+
+    if isinstance(data, dict):
+        # Process dictionary
+        dict_items = []
+        for key, value in data.items():
+            new_prefix = f"{prefix}.{key}" if prefix else key
+
+            if isinstance(value, (dict, list)):
+                # Recursively flatten nested structures
+                nested_items = flatten_nested_json(value, new_prefix)
+                dict_items.append(nested_items)
+            else:
+                # Add simple value
+                dict_items.append([{new_prefix: value}])
+
+        # Combine all combinations of flattened items
+        for items in itertools.product(*dict_items):
+            combined = {}
+            for item in items:
+                if isinstance(item, list):
+                    for i in item:
+                        combined.update(i)
+                else:
+                    combined.update(item)
+            flattened_items.append(combined)
+
+    elif isinstance(data, list):
+        # Process list
+        if not data:
+            return [{f"{prefix}": []}]
+
+        # Handle list of primitive values
+        if all(not isinstance(item, (dict, list)) for item in data):
+            return [{f"{prefix}": data}]
+
+        # Process list of complex items
+        for i, item in enumerate(data):
+            if isinstance(item, (dict, list)):
+                # Recursively flatten nested structures with index
+                nested_items = flatten_nested_json(item, f"{prefix}")
+                flattened_items.extend(nested_items)
+            else:
+                flattened_items.append({f"{prefix}[{i}]": item})
+
+    else:
+        # Handle primitive values
+        return [{prefix: data}]
+
+    return flattened_items
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -90,13 +148,49 @@ async def convert_json(
                     "index.html",
                     {"request": request, "error": "The JSON array is empty"},
                 )
-            df = pd.DataFrame(json_data)
+
+            # Use json_normalize with record_path for deeply nested structures
+            try:
+                # For deeply nested structures, try custom flattening
+                if any(
+                    isinstance(item, dict)
+                    and any(isinstance(v, (dict, list)) for v in item.values())
+                    for item in json_data
+                ):
+                    # Custom recursive flattening for complex nested structures
+                    flattened_data = []
+                    for item in json_data:
+                        flat_items = flatten_nested_json(item)
+                        flattened_data.extend(flat_items)
+
+                    # Create DataFrame from flattened data
+                    if flattened_data:
+                        df = pd.DataFrame(flattened_data)
+                    else:
+                        df = pd.json_normalize(json_data)
+                else:
+                    # Simple array of objects, use standard approach
+                    df = pd.DataFrame(json_data)
+            except Exception as e:
+                # Fallback to standard json_normalize if custom flattening fails
+                df = pd.json_normalize(json_data)
+
         elif isinstance(json_data, dict):
             # Handle nested JSON by flattening it
-            if any(isinstance(v, (dict, list)) for v in json_data.values()):
+            try:
+                # For deeply nested dictionaries, try custom flattening
+                if any(isinstance(v, (dict, list)) for v in json_data.values()):
+                    flattened_data = flatten_nested_json(json_data)
+                    if flattened_data:
+                        df = pd.DataFrame(flattened_data)
+                    else:
+                        df = pd.json_normalize(json_data)
+                else:
+                    # Simple dictionary, use standard approach
+                    df = pd.DataFrame([json_data])
+            except Exception as e:
+                # Fallback to standard json_normalize if custom flattening fails
                 df = pd.json_normalize(json_data)
-            else:
-                df = pd.DataFrame([json_data])
         else:
             return templates.TemplateResponse(
                 "index.html",
